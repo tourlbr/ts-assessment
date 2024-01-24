@@ -31,6 +31,10 @@ In this case, instead of updating the system, we will convert the Input json to 
 * **convertAnnotation**:  Converts the input Annotation into a ConvertedAnnotation. The children of the ConvertedAnnotation needs to be **sorted by index**. The `ìndex` is the startIndex of the first index of the list of indices, namely `indices[0].startIndex`. In case it's a group (indices = []), take the earliest index of the converted children.
 * **sortEntities**: Sorts the entities based on name.
 * **sortAnnotations**: Sorts the annotations based on the index of ConvertedAnnotation.
+  
+`src/input.json`: This is the payload we send to clients too. 
+
+`src/output.json`: The output that should be returned by `convertInput`. This json will be used to test your return value of `convertInput` in `src/todo.spec.ts`. You can use this file as a reference to implement all todos.
 
 `src/document.jpg`: Below you can find the document we are processing. The annotations in the Input payload are highlighted with a color and bounding box.
 ![image info](./src/document.jpg)
