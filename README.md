@@ -3,6 +3,9 @@
 ## Introduction
 During this assessment you will need to complete some parts of the code. We have foreseen already types, helper functions and tests. In the end you should be able to let the mocha test succeed.
 
+## Forking - do not forget!
+Before we get started with the assessment, please **fork** first this repository to your private Github. 
+
 ## Installation
 Node version we have used: 18.18.2
 
@@ -31,6 +34,7 @@ In this case, instead of updating the system, we will convert the Input json to 
 * **convertAnnotation**:  Converts the input Annotation into a ConvertedAnnotation. The children of the ConvertedAnnotation needs to be **sorted by index**. The `ìndex` is the startIndex of the first index of the list of indices, namely `indices[0].startIndex`. In case it's a group (indices = []), take the earliest index of the converted children.
 * **sortEntities**: Sorts the entities based on name.
 * **sortAnnotations**: Sorts the annotations based on the index of ConvertedAnnotation.
+* You can change every function (name, arguments, typings, etc) in `src/todo.ts` as you want. The code that is present is just to give you an indication where you need to head to.
   
 `src/input.json`: This is the payload we send to clients too. 
 
@@ -39,5 +43,15 @@ In this case, instead of updating the system, we will convert the Input json to 
 `src/document.jpg`: Below you can find the document we are processing. The annotations in the Input payload are highlighted with a color and bounding box.
 ![image info](./src/document.jpg)
 
+### Bonus points 
+Do you want to make a good impression? Do you still have some time? There are some bonus points to achieve! It won't take long, I promise!
+* `src/todo.ts` Create a validation function that validates your output json. Hint: You can do this via yup, see: https://github.com/jquense/yup.
+* `src/todo.spec.ts`  Cover your validation function with tests. 
+
 ## Next steps
-Soon there will be a verbal technically assessment. During this assessment, we will iterate over your solution. Don't stress if your solution isn't perfect yet. The idea of this exercise is to check your reasoning.
+Soon there will be a verbal technically assessment. During this assessment, we will iterate over your solution. Don't stress if your solution isn't perfect yet. The idea of this exercise is to check your reasoning. 
+
+Make sure you have committed your solution to the `master` branch (on your private repository). Don't forget to push :) 
+
+<h4>Good luck and see you soon!</h4>
+

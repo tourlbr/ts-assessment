@@ -14,4 +14,6 @@ describe('Todo', () => {
     expect(output.documents[0].annotations.length).to.equal(9);
     expect(output).to.deep.equal(outputJson);
   });
+
+  // BONUS: Write tests that validates the output json. Use the function you have written in "src/todo.ts".
 });

@@ -18,10 +18,12 @@ export const convertInput = (input: Input): Output => {
   return { documents };
 };
 
+// HINT: you probably need to pass extra argument(s) to this function to make it performant.
 const convertEntity = (entity: Entity): ConvertedEntity => {
   throw new Error('Not implemented');
 };
 
+// HINT: you probably need to pass extra argument(s) to this function to make it performant.
 const convertAnnotation = (annotation: Annotation): ConvertedAnnotation => {
   throw new Error('Not implemented');
 };
@@ -33,3 +35,5 @@ const sortEntities = (entityA: ConvertedEntity, entityB: ConvertedEntity) => {
 const sortAnnotations = (annotationA: ConvertedAnnotation, annotationB: ConvertedAnnotation) => {
   throw new Error('Not implemented');
 };
+
+// BONUS: Create validation function that validates the result of "convertInput". Use yup as library to validate your result.
