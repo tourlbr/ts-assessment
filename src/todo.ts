@@ -1,44 +1,34 @@
+import { Dictionary, groupBy} from 'lodash';
 import { Annotation, Entity, Input } from './types/input';
 import { ConvertedAnnotation, ConvertedEntity, Output } from './types/output';
 
 export const convertInput = (input: Input): Output => {
   const documents = input.documents.map((document) => {
     // Map all entities to their respective parents if they have a parent
-    const parentEntityChildMap = new Map<string | null, Entity[]>();
-    document.entities.forEach((entity: Entity) => {
-      if (entity.refs) {
-        entity.refs.forEach((refId: string) => {
-          const children = parentEntityChildMap.get(refId) || [];
-
-          parentEntityChildMap.set(refId, [...children, entity]);
-        })
-      }
-    });
+    const entitiesByParent: Dictionary<Entity[]> = groupBy(document.entities, 'refs');
 
     // Convert entities to converted entities
-    const entities = document.entities.map((entity: Entity) => convertEntity(entity, parentEntityChildMap)).sort(sortEntities);
+    const entities: ConvertedEntity[] = document.entities.map((entity: Entity) => convertEntity(entity, entitiesByParent)).sort(sortEntities);
 
-    // TODO: map the annotations to the new structure and sort them based on the property "index"
-    // Make sure the nested children are also mapped and sorted
-
-    // APPROACH
-    // TODO: Map all annotation to their respective parents if they have a parent for later use
-    // TODO: Map linked entities to the annotation id for later use
+    // Map all annotation to their respective parents if they have a parent for later use
+    // Map linked entities to the annotation id for later use
+    // Combine everything to a converted annotation
     const annotations = document.annotations.map(convertAnnotation).sort(sortAnnotations);
+
+    // Converted result
     return { id: document.id, entities, annotations };
   });
-
   return { documents };
 };
 
-const convertEntity = (entity: Entity, parentEntityChildMap: Map<string | null, Entity[]>): ConvertedEntity => {
+const convertEntity = (entity: Entity, entitiesByParent: Dictionary<Entity[]>): ConvertedEntity => {
   // Determine children of current entity
   // If current entity does not have any children just return empty array
   // If it does have children return the converted entity
-  const parentEntityChild: Entity[] | undefined = parentEntityChildMap.get(entity.id);
-  const children = parentEntityChild ? [
-    ...parentEntityChild
-      .map((parentEntityChild: any) => convertEntity(parentEntityChild, parentEntityChildMap))
+  const currentEntityChildren: Entity[] = entitiesByParent[entity.id];
+  const convertedEntityChildren = currentEntityChildren ? [
+    ...currentEntityChildren
+      .map((currentEntityChild: Entity) => convertEntity(currentEntityChild, entitiesByParent))
   ] : [];
 
   return {
@@ -46,7 +36,7 @@ const convertEntity = (entity: Entity, parentEntityChildMap: Map<string | null, 
     name: entity.name,
     type: entity.type,
     class: entity.class,
-    children: children.sort(sortEntities)
+    children: convertedEntityChildren.sort(sortEntities)
   };
 };
 
@@ -60,7 +50,7 @@ const sortEntities = (entityA: ConvertedEntity, entityB: ConvertedEntity) => {
 };
 
 const sortAnnotations = (annotationA: ConvertedAnnotation, annotationB: ConvertedAnnotation) => {
-  throw new Error('Not implemented');
+  return annotationA.index < annotationB.index ? -1 : 1;
 };
 
 // BONUS: Create validation function that validates the result of "convertInput". Use yup as library to validate your result.
