@@ -118,3 +118,8 @@ interface DocumentType {
   threshold: number | null;
   confidence: number | null;
 }
+
+export interface TempAnnotation extends Annotation {
+  children: TempAnnotation[];
+  entity: {id: string, name: string}
+}

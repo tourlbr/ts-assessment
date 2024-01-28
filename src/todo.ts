@@ -1,19 +1,40 @@
-import { Dictionary, groupBy} from 'lodash';
-import { Annotation, Entity, Input } from './types/input';
+import { Dictionary, groupBy, head, isEqual } from 'lodash';
+import { Annotation, Entity, Input, TempAnnotation } from './types/input';
 import { ConvertedAnnotation, ConvertedEntity, Output } from './types/output';
 
 export const convertInput = (input: Input): Output => {
   const documents = input.documents.map((document) => {
     // Map all entities to their respective parents if they have a parent
-    const entitiesByParent: Dictionary<Entity[]> = groupBy(document.entities, 'refs');
+    const entitiesByParent: Dictionary<Entity[]> = groupBy(
+      document.entities,
+      'refs'
+    );
 
     // Convert entities to converted entities
-    const entities: ConvertedEntity[] = document.entities.map((entity: Entity) => convertEntity(entity, entitiesByParent)).sort(sortEntities);
+    const entities: ConvertedEntity[] = document.entities
+      .map((entity: Entity) => convertEntity(entity, entitiesByParent))
+      .sort(sortEntities);
+
+
+    // Determine annotations by parent id
+    const annotationsByParentId: Dictionary<Annotation[]> = groupBy(
+      document.annotations,
+      'refs'
+    );
 
     // Map all annotation to their respective parents if they have a parent for later use
-    // Map linked entities to the annotation id for later use
+    // Already set entity light to annotations
+    // Filter out annotations that already belong to another annotation as children
+    const annotationsByParent: TempAnnotation[] = document.annotations
+      .map((annotation: Annotation) =>
+        setAnnotationByParent(annotation, entities, annotationsByParentId)
+      )
+      .filter((annotation: TempAnnotation) => annotation.refs.length === 0);
+
     // Combine everything to a converted annotation
-    const annotations = document.annotations.map(convertAnnotation).sort(sortAnnotations);
+    const annotations = annotationsByParent
+      .map((annotation) => convertAnnotation(annotation))
+      .sort(sortAnnotations);
 
     // Converted result
     return { id: document.id, entities, annotations };
@@ -40,9 +61,53 @@ const convertEntity = (entity: Entity, entitiesByParent: Dictionary<Entity[]>): 
   };
 };
 
-// HINT: you probably need to pass extra argument(s) to this function to make it performant.
-const convertAnnotation = (annotation: Annotation): ConvertedAnnotation => {
-  throw new Error('Not implemented');
+
+const setAnnotationByParent = (
+  annotation: Annotation,
+  entities: ConvertedEntity[],
+  annotationsByParent: Dictionary<Annotation[]>
+): TempAnnotation => {
+  const currentAnnotationChildren: Annotation[] =
+    annotationsByParent[annotation.id] || [];
+
+  const entity = entities.find(
+    (entity: ConvertedEntity) => entity.id === annotation.entityId
+  );
+
+  return {
+    ...annotation,
+    children: currentAnnotationChildren.map((c) =>
+      setAnnotationByParent(c, entities, annotationsByParent)
+    ),
+    entity: {
+      id: entity ? entity.id : annotation.id,
+      name: entity ? entity.name : '',
+    },
+  };
+};
+
+const convertAnnotation = (annotation: TempAnnotation): ConvertedAnnotation => {
+  let convertedAnnotationChildren: ConvertedAnnotation[] = [];
+  const annotationChildren: TempAnnotation[] = annotation.children || [];
+
+  // If annotation has children
+  // - Convert children
+  // - Sort children
+  if (annotationChildren.length) {
+    convertedAnnotationChildren = annotationChildren
+      .map((annotation: TempAnnotation) => convertAnnotation(annotation))
+      .sort(sortAnnotations);
+  }
+
+  return {
+    id: annotation.entityId,
+    entity: annotation.entity,
+    value: annotation.value,
+    index: annotation?.indices?.length
+      ? head(annotation.indices)?.start || 0
+      : head(convertedAnnotationChildren)?.index || 0,
+    children: convertedAnnotationChildren,
+  };
 };
 
 const sortEntities = (entityA: ConvertedEntity, entityB: ConvertedEntity) => {
