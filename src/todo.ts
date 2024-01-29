@@ -1,6 +1,7 @@
-import { Dictionary, groupBy, head, isEqual } from 'lodash';
-import { Annotation, Entity, Input, TempAnnotation } from './types/input';
+import { Dictionary, groupBy, head} from 'lodash';
+import { Annotation, Entity, EntityClass, EntityType, Input, TempAnnotation } from './types/input';
 import { ConvertedAnnotation, ConvertedEntity, Output } from './types/output';
+import { array, mixed, number, object, string } from 'yup';
 
 export const convertInput = (input: Input): Output => {
   const documents = input.documents.map((document) => {
@@ -61,7 +62,6 @@ const convertEntity = (entity: Entity, entitiesByParent: Dictionary<Entity[]>): 
   };
 };
 
-
 const setAnnotationByParent = (
   annotation: Annotation,
   entities: ConvertedEntity[],
@@ -119,3 +119,47 @@ const sortAnnotations = (annotationA: ConvertedAnnotation, annotationB: Converte
 };
 
 // BONUS: Create validation function that validates the result of "convertInput". Use yup as library to validate your result.
+export const validateConvertInputOutput = async (output: Output) => {
+  const entitySchema = object()
+    .shape({
+      id: string().required(),
+      name: string().required(),
+      children: array(object().nullable()),
+    })
+    .required();
+
+  const annotationSchema = object()
+    .shape({
+      id: string().required(),
+      entity: object({
+        id: string().required(),
+        name: string().required(),
+      }),
+      value: mixed()
+        .test('value', 'Value must be a number or a string', (value) => {
+          if (
+            typeof value === 'string' ||
+            typeof value === 'number' ||
+            (typeof value === 'object' && value === null)
+          ) {
+            return true;
+          }
+          return false;
+        })
+        .nullable(),
+      index: number().positive().integer().required(),
+    })
+    .required();
+
+  const outputSchema = object().shape({
+    documents: array(
+      object({
+        id: string().required(),
+        entities: array(entitySchema).required(),
+        annotations: array(annotationSchema).required(),
+      })
+    ).required(),
+  });
+
+  return await outputSchema.validate(output);
+};
