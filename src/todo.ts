@@ -100,7 +100,7 @@ const convertAnnotation = (annotation: TempAnnotation): ConvertedAnnotation => {
   }
 
   return {
-    id: annotation.entityId,
+    id: annotation.id,
     entity: annotation.entity,
     value: annotation.value,
     index: annotation?.indices?.length
