@@ -124,6 +124,8 @@ export const validateConvertInputOutput = async (output: Output) => {
     .shape({
       id: string().required(),
       name: string().required(),
+      type: mixed().oneOf(Object.values(EntityType)).required(),
+      class: mixed().oneOf(Object.values(EntityClass)).required(),
       children: array(object().nullable()),
     })
     .required();
